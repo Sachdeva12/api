@@ -68,10 +68,17 @@ Now write a review using these points organically, like a happy customer telling
     // 🔍 Always log raw OpenAI response for debugging
     console.log("🔍 OpenAI raw response:", data);
 
-    if (data?.choices?.[0]?.message?.content) {
+    // ✅ Handle multiple possible formats
+    const review =
+      data?.choices?.[0]?.message?.content ||
+      data?.choices?.[0]?.delta?.content ||
+      data?.choices?.[0]?.text ||
+      null;
+
+    if (review) {
       res.status(200).json({
-        review: data.choices[0].message.content.trim(),
-        raw: data, // include raw for debugging
+        review: review.trim(),
+        raw: data, // keep raw for debugging
       });
     } else {
       res.status(500).json({
