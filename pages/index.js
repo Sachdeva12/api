@@ -1,7 +1,7 @@
 export default function Home() {
   // Only for testing - do not use in production
-  const apiKeyPreview = process.env.NEXT_PUBLIC_OPENAI_KEY
-    ? process.env.NEXT_PUBLIC_OPENAI_KEY.slice(0, 5) + "*****"
+  const apiKeyPreview = process.env.OPENAI_API_KEY
+    ? process.env.OPENAI_API_KEY.slice(0, 5) + "*****"
     : "❌ Not Loaded";
 
   return (
