@@ -65,14 +65,22 @@ Now write a review using these points organically, like a happy customer telling
 
     const data = await response.json();
 
+    // 🔍 Always log raw OpenAI response for debugging
+    console.log("🔍 OpenAI raw response:", data);
+
     if (data?.choices?.[0]?.message?.content) {
-      res.status(200).json({ review: data.choices[0].message.content.trim() });
+      res.status(200).json({
+        review: data.choices[0].message.content.trim(),
+        raw: data, // include raw for debugging
+      });
     } else {
-      console.error("OpenAI API Error:", data);
-      res.status(500).json({ error: "No review generated", details: data });
+      res.status(500).json({
+        error: "No review generated",
+        raw: data, // return raw error so you can see full issue
+      });
     }
   } catch (err) {
-    console.error("Server error:", err);
+    console.error("❌ Server error:", err);
     res.status(500).json({ error: "Server error", details: err.message });
   }
 }
