@@ -1,4 +1,14 @@
 export default async function handler(req, res) {
+  // ✅ Allow CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // ✅ Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Only POST requests allowed" });
   }
@@ -22,9 +32,9 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4",
+        model: "gpt-4o-mini", // ⚡ faster & cheaper (or keep "gpt-4")
         messages: [
-          { 
+          {
             role: "system",
             content:
               "You are a customer writing a product review. Write in a natural, conversational tone like a real customer. Do not include a title or headings. Start the review directly, keep it authentic and different each time. Product is about pillows.",
@@ -55,12 +65,14 @@ Now write a review using these points organically, like a happy customer telling
 
     const data = await response.json();
 
-    if (data.choices && data.choices.length > 0) {
+    if (data?.choices?.[0]?.message?.content) {
       res.status(200).json({ review: data.choices[0].message.content.trim() });
     } else {
-      res.status(500).json({ error: "No review generated" });
+      console.error("OpenAI API Error:", data);
+      res.status(500).json({ error: "No review generated", details: data });
     }
   } catch (err) {
+    console.error("Server error:", err);
     res.status(500).json({ error: "Server error", details: err.message });
   }
 }
