@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // ✅ Handle preflight
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
@@ -13,18 +12,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Only POST requests allowed" });
   }
 
-  const {
-    reason,
-    impressions,
-    comfort,
-    improvements,
-    durability,
-    favorite,
-    recommendation,
-    final,
-  } = req.body;
-
   try {
+    // ✅ Ensure req.body is parsed correctly
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+
+    const {
+      reason,
+      impressions,
+      comfort,
+      improvements,
+      durability,
+      favorite,
+      recommendation,
+      final,
+    } = body;
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -32,7 +34,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // ⚡ faster & cheaper (or keep "gpt-4")
+        model: "gpt-4", // 🔄 safer for now (your working version uses gpt-4)
         messages: [
           {
             role: "system",
@@ -42,7 +44,6 @@ export default async function handler(req, res) {
           {
             role: "user",
             content: `Here is what the customer shared:
-
 - Why they bought it: ${reason}
 - First impression: ${impressions}
 - Comfort & support: ${comfort}
@@ -65,29 +66,21 @@ Now write a review using these points organically, like a happy customer telling
 
     const data = await response.json();
 
-    // 🔍 Always log raw OpenAI response for debugging
     console.log("🔍 OpenAI raw response:", data);
 
-    // ✅ Handle multiple possible formats
-    const review =
-      data?.choices?.[0]?.message?.content ||
-      data?.choices?.[0]?.delta?.content ||
-      data?.choices?.[0]?.text ||
-      null;
-
-    if (review) {
-      res.status(200).json({
-        review: review.trim(),
-        raw: data, // keep raw for debugging
+    if (data?.choices?.[0]?.message?.content) {
+      return res.status(200).json({
+        review: data.choices[0].message.content.trim(),
+        raw: data,
       });
     } else {
-      res.status(500).json({
+      return res.status(500).json({
         error: "No review generated",
-        raw: data, // return raw error so you can see full issue
+        raw: data,
       });
     }
   } catch (err) {
     console.error("❌ Server error:", err);
-    res.status(500).json({ error: "Server error", details: err.message });
+    return res.status(500).json({ error: "Server error", details: err.message });
   }
 }
