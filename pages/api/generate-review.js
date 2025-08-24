@@ -42,7 +42,7 @@ export default async function handler(req, res) {
           {
             role: "system",
             content:
-              "You are a customer writing a product review. Keep it natural, like a real customer, about a pillow.",
+              "You are a customer writing a product review. Keep it natural, like a real customer, about a pillow and dont write any brand name in it.",
           },
           {
             role: "user",
